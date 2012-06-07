@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Controller configuration</title>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+    <script src="/javascripts/gamepad.js"></script>
+    <script>
+    window.requestAnimationFrame = (function(){
+      return window.requestAnimationFrame       || // La forme standardisée
+             window.webkitRequestAnimationFrame || // Pour Chrome et Safari
+             window.mozRequestAnimationFrame    || // Pour Firefox
+             window.oRequestAnimationFrame      || // Pour Opera
+             window.msRequestAnimationFrame     || // Pour Internet Explorer
+             function(callback){                   // Pour les élèves du dernier rang
+               window.setTimeout(callback, 1000 / 60);
+             };
+    })();
+      function loop() {
+        GameControllers.update(Date.now());
+        var ctrls = GameControllers.getControllers();
+        for(var i in ctrls) {
+          var pad = ctrls[i]
+            , el = pad.el;
+          el.find('.start').text(pad.start?'ON':'OFF');
+          el.find('.buttons').text(JSON.stringify(pad.raw.buttons));
+          el.find('.axes').text(JSON.stringify(pad.raw.axes));
+        }
+        window.requestAnimationFrame(loop);
+      }
+      $(function() {
+        var d = $('#debug');
+        var c = $('#ctrls');
+        function dbg() {
+          var a = $('<p />');
+          a.text(Array.prototype.join.call(arguments, ' '));
+          d.append(a);
+        };
+        GameControllers.debug(dbg);
+        GameControllers.on('connection', function(pad) {
+          pad.el = $('<ul />');
+          pad.el.html('<li>Label : '+pad.label +'</li>'+
+            '<li>Vendor : '+pad.vendor +'</li>'+
+            '<li>Product : '+pad.product +'</li>'+
+            '<li>Start :<strong class="start"></strong></li>'+
+            '<li>Select :<strong class="select"></strong></li>'+
+            '<li>Up :<strong class="up"></strong></li>'+
+            '<li>Down :<strong class="down"></strong></li>'+
+            '<li>Left :<strong class="left"></strong></li>'+
+            '<li>Right :<strong class="right"></strong></li>'+
+            '<li>Start :<strong class="start"></strong></li>'+
+            '<li>Axes :<strong class="axes"></strong></li>'+
+            '<li>Buttons :<strong class="buttons"></strong></li>');
+          c.append(pad.el);
+          console.log(['Found controller :', pad.label, pad.vendor, pad.product]);
+        });
+        dbg('Start controller configuration');
+        dbg(GameControllers.supported?'Your browser seem to support GameControllers':'Your browser don\'t support GameControllers');
+        window.requestAnimationFrame(loop);
+      });
+    </script>
+  </head>
+  <body>
+    <h1>Crowdsourcing of game controller profiles</h1>
+    <div id="ctrls"></div>
+    <div id="debug">
+      
+    </div>
+  </body>
+</html>
